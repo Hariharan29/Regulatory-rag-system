@@ -31,16 +31,7 @@ def upgrade() -> None:
     # Must run before creating any VECTOR column.
     op.execute("CREATE EXTENSION IF NOT EXISTS vector")
 
-    # ── 2. Create ENUM types ──────────────────────────────────────────────────
-    document_source = sa.Enum("RBI", "SEBI", name="document_source")
-    document_type = sa.Enum(
-        "circular", "master_direction", "notification", "other",
-        name="document_type",
-    )
-    document_source.create(op.get_bind(), checkfirst=True)
-    document_type.create(op.get_bind(), checkfirst=True)
-
-    # ── 3. documents table ────────────────────────────────────────────────────
+    # ── 2. documents table and its ENUM types ────────────────────────────────
     op.create_table(
         "documents",
         sa.Column("id", sa.Integer(), primary_key=True, autoincrement=True),
