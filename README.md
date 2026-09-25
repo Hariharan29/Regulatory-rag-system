@@ -104,6 +104,11 @@ After those pass, add PDFs and run `python -m scripts.ingest` with PostgreSQL an
 the OpenAI key configured. Push the feature branch and open a PR to run GitHub CI;
 merge only after its checks pass.
 
+### Inspect retrieval (Phase 4)
+
+With documents already ingested, run `python -m scripts.evaluate_retrieval` from
+`backend/` to compare dense, BM25, and fused rankings for five sample questions.
+
 ## Design Decisions
 
 See [DECISIONS.md](DECISIONS.md).
@@ -115,7 +120,7 @@ See [DECISIONS.md](DECISIONS.md).
 | 1 | Scaffolding + CI/CD | ✅ Done |
 | 2 | Database Schema | ✅ Done |
 | 3 | Ingestion Pipeline | 🚧 Implemented locally; awaiting user validation |
-| 4 | Hybrid Retrieval | — |
+| 4 | Hybrid Retrieval | 🚧 Implemented locally; awaiting user validation |
 | 5 | Generation + Citations | — |
 | 6 | API Layer | — |
 | 7 | Frontend | — |

@@ -36,3 +36,13 @@ Written *as decisions are made* (not retrospectively) so it doubles as interview
 ### D7: Synchronous, per-PDF ingestion
 **Decision:** The CLI processes PDFs one at a time and commits each PDF with its chunks in one transaction.
 **Reason:** This keeps failures isolated and reruns simple for the small manually seeded corpus, without adding a task queue or partial document records.
+
+## Phase 4 — Hybrid Retrieval
+
+### D8: Combine dense and BM25 rankings with RRF
+**Decision:** Fuse retriever ranks rather than blending their raw scores.
+**Reason:** Cosine similarity and BM25 scores have different scales, while reciprocal rank fusion is straightforward to verify and needs no score normalization.
+
+### D9: Keep the BM25 index in process memory
+**Decision:** Load chunk text and metadata into a reusable in-memory BM25 index for retrieval and evaluation.
+**Reason:** The expected corpus is small and manually seeded. This avoids a second persistence system; index rebuilding after ingestion is acceptable at this project scale.
