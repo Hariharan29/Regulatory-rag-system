@@ -59,6 +59,11 @@ def _make_session_factory() -> sessionmaker:
     )
 
 
+def create_session() -> Session:
+    """Create a standalone session for CLI jobs outside a request lifecycle."""
+    return _make_session_factory()()
+
+
 # ── Declarative base ──────────────────────────────────────────────────────────
 # All ORM models inherit from this Base so Alembic can discover them.
 # Importing Base here does NOT create an engine — safe to import anywhere.

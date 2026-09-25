@@ -5,9 +5,11 @@ psycopg2-binary
 pgvector
 alembic
 langchain
+langchain-text-splitters
 langchain-openai
 openai
 pymupdf
+tiktoken
 python-dotenv
 rank-bm25
 pydantic-settings

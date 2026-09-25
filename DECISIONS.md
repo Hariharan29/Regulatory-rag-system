@@ -26,3 +26,13 @@ Written *as decisions are made* (not retrospectively) so it doubles as interview
 ### D5: Manual Terraform apply, no CI auto-deploy
 **Decision:** `terraform apply` is run manually from a local machine; CI does not automate it.
 **Reason:** For a single-environment, single-VM student project, an auto-apply pipeline adds risk (accidental infrastructure changes from a bad merge) without adding meaningful value. We get the IaC benefit (reproducible, version-controlled infrastructure) while keeping the apply step as an explicit human decision. This is also worth saying plainly in an interview rather than pretending we have a full GitOps pipeline.
+
+## Phase 3 — Ingestion Pipeline
+
+### D6: Split each PDF page independently
+**Decision:** Recursive token-aware chunks do not cross page boundaries.
+**Reason:** Chunks keep a single source page for accurate citations. The small possibility of splitting a clause at a page break is preferable to ambiguous page attribution.
+
+### D7: Synchronous, per-PDF ingestion
+**Decision:** The CLI processes PDFs one at a time and commits each PDF with its chunks in one transaction.
+**Reason:** This keeps failures isolated and reruns simple for the small manually seeded corpus, without adding a task queue or partial document records.
