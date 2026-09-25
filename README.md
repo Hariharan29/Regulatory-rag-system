@@ -79,7 +79,30 @@ open http://localhost:8000/docs
 
 See [DECISIONS.md](DECISIONS.md) for architectural rationale.
 
-> **Coming in later phases:** ingestion pipeline (Phase 3), retrieval (Phase 4), query API (Phase 6), and frontend (Phase 7).
+### Ingest PDFs (Phase 3)
+
+Place PDFs in `data/raw_pdfs/` using names such as `RBI_circular_2024_01.pdf` or
+`SEBI_master_direction_2023_05.pdf`. From `backend/`, run:
+
+```bash
+python -m scripts.ingest
+```
+
+The command reads `DATABASE_URL` and `OPENAI_API_KEY` from the repository `.env`,
+then stores each PDF and its page-aware chunks. Add real PDFs before this ingestion
+smoke test; parser, chunker, embedder-mocked, and ingestion-mocked pytest cases do
+not require seed PDFs or OpenAI calls.
+
+Run the Phase 3 checks from `backend/` before opening the feature PR:
+
+```bash
+pytest -q
+ruff check .
+```
+
+After those pass, add PDFs and run `python -m scripts.ingest` with PostgreSQL and
+the OpenAI key configured. Push the feature branch and open a PR to run GitHub CI;
+merge only after its checks pass.
 
 ## Design Decisions
 
@@ -90,8 +113,8 @@ See [DECISIONS.md](DECISIONS.md).
 | Phase | Description | Status |
 |---|---|---|
 | 1 | Scaffolding + CI/CD | ✅ Done |
-| 2 | Database Schema | ⏳ Next |
-| 3 | Ingestion Pipeline | — |
+| 2 | Database Schema | ✅ Done |
+| 3 | Ingestion Pipeline | 🚧 Implemented locally; awaiting user validation |
 | 4 | Hybrid Retrieval | — |
 | 5 | Generation + Citations | — |
 | 6 | API Layer | — |

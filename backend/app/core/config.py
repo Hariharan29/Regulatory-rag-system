@@ -5,6 +5,8 @@ Application-wide settings loaded from environment variables / .env file.
 Uses pydantic-settings so every variable is type-checked at startup.
 """
 
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -21,10 +23,11 @@ class Settings(BaseSettings):
     # ── Application ──────────────────────────────────────────────────────────
     log_level: str = "INFO"
 
-    # Tells pydantic-settings to read from a .env file in the project root.
-    # env_file is only used when the variable isn't already in the environment
-    # (environment variables always take precedence).
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    # Resolve .env from the repository root, independent of the process cwd.
+    model_config = SettingsConfigDict(
+        env_file=Path(__file__).resolve().parents[3] / ".env",
+        env_file_encoding="utf-8",
+    )
 
 
 # Module-level singleton — import this everywhere you need settings.
