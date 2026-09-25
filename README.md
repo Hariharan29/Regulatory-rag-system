@@ -1,0 +1,100 @@
+# Finance RAG — RBI/SEBI Compliance Assistant
+
+> A Retrieval-Augmented Generation system that indexes RBI and SEBI regulatory documents and answers compliance questions in plain English, with inline citations pointing to the source document and page number.
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        User Query                           │
+└──────────────────────────────┬──────────────────────────────┘
+                               │
+                    ┌──────────▼──────────┐
+                    │   FastAPI Backend    │
+                    │   POST /query        │
+                    └──────────┬──────────┘
+                               │
+              ┌────────────────┼────────────────┐
+              │                │                │
+   ┌──────────▼──────┐  ┌──────▼──────┐  ┌─────▼──────────┐
+   │  Dense Retrieval │  │   BM25      │  │  Audit Log     │
+   │  (pgvector cos) │  │  (in-memory)│  │  (PostgreSQL)  │
+   └──────────┬──────┘  └──────┬──────┘  └────────────────┘
+              │                │
+              └────────┬───────┘
+                       │  RRF Fusion
+              ┌────────▼────────┐
+              │  Top-k Chunks   │
+              └────────┬────────┘
+                       │
+              ┌────────▼────────┐
+              │  GPT-4o-mini    │
+              │  (cited answer) │
+              └────────┬────────┘
+                       │
+              ┌────────▼────────┐
+              │  React Frontend │
+              │  (citations UI) │
+              └─────────────────┘
+```
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Backend | FastAPI, SQLAlchemy, Alembic |
+| Database | PostgreSQL + pgvector |
+| Embeddings | OpenAI `text-embedding-3-small` |
+| Generation | OpenAI `gpt-4o-mini` |
+| Retrieval | Hybrid: pgvector (dense) + BM25 (sparse) via RRF |
+| PDF Parsing | PyMuPDF (fitz) |
+| Frontend | React, Vite, TailwindCSS |
+| Infra | Docker Compose (local), Terraform + EC2 (cloud) |
+
+## Quick Start (Local)
+
+```bash
+# 1. Clone and enter the repo
+git clone https://github.com/YOUR_USERNAME/finance-rag.git
+cd finance-rag
+
+# 2. Copy and fill in environment variables
+cp .env.example .env
+# Edit .env: set OPENAI_API_KEY
+
+# 3. Start the database and backend
+docker compose up --build
+
+# 4. Verify the backend is running
+curl http://localhost:8000/health
+# → {"status": "ok"}
+
+# 5. Explore the API
+open http://localhost:8000/docs
+```
+
+## Setup Instructions (full)
+
+See [DECISIONS.md](DECISIONS.md) for architectural rationale.
+
+> **Coming in later phases:** ingestion pipeline (Phase 3), retrieval (Phase 4), query API (Phase 6), and frontend (Phase 7).
+
+## Design Decisions
+
+See [DECISIONS.md](DECISIONS.md).
+
+## Project Status
+
+| Phase | Description | Status |
+|---|---|---|
+| 1 | Scaffolding + CI/CD | ✅ Done |
+| 2 | Database Schema | ⏳ Next |
+| 3 | Ingestion Pipeline | — |
+| 4 | Hybrid Retrieval | — |
+| 5 | Generation + Citations | — |
+| 6 | API Layer | — |
+| 7 | Frontend | — |
+| 8 | Eval & Polish | — |
+| 9 | Cloud / Terraform | — |

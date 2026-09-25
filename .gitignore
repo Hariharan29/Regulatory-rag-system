@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+*.cover
+*.log
+
+# Environment variables — NEVER commit the real .env
+.env
+!.env.example
+
+# Docker volumes
+pgdata/
+
+# Node / Frontend
+node_modules/
+frontend/dist/
+frontend/.next/
+.npm
+
+# Data — PDFs are large; don't commit them
+data/raw_pdfs/*.pdf
+
+# Terraform
+infra/.terraform/
+infra/*.tfstate
+infra/*.tfstate.backup
+infra/.terraform.lock.hcl
+infra/terraform.tfvars
+# commit terraform.tfvars.example instead (see infra/)
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

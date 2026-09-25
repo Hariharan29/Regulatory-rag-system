@@ -1,0 +1,19 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+psycopg2-binary
+pgvector
+alembic
+langchain
+langchain-openai
+openai
+pymupdf
+python-dotenv
+rank-bm25
+pydantic-settings
+
+# Testing & linting (also installed in CI)
+pytest
+pytest-asyncio
+httpx
+ruff
