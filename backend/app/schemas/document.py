@@ -36,3 +36,7 @@ class DocumentResponse(DocumentBase):
 class DocumentListResponse(BaseModel):
     total: int
     items: list[DocumentResponse]
+
+
+class DocumentDetailResponse(DocumentResponse):
+    chunk_count: int

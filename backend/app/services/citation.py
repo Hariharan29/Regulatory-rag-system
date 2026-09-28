@@ -33,8 +33,8 @@ def build_citation_prompt(question: str, chunks: list[Chunk]) -> str:
 
     return (
         "You are a compliance research assistant. Answer ONLY from the context below. "
-        "If the context does not contain a confident answer, say that you cannot provide a confident answer "
-        "based on the indexed documents.\n\n"
+        "If the context does not contain a confident answer, say that you cannot "
+        "provide a confident answer based on the indexed documents.\n\n"
         "Rules:\n"
         "1. Use the exact chunk IDs shown in the source list, like [21].\n"
         "2. Each factual statement must include the relevant citation marker.\n"
