@@ -26,8 +26,18 @@ def make_chunk(chunk_id: int, *, title: str, page_number: int, text: str) -> Chu
 
 def test_build_citation_prompt_includes_context_and_rules():
     chunks = [
-        make_chunk(1, title="KYC Circular 2024", page_number=5, text="Banks must verify customer identity."),
-        make_chunk(2, title="KYC Circular 2024", page_number=7, text="NBFCs must keep a transaction log."),
+        make_chunk(
+            1,
+            title="KYC Circular 2024",
+            page_number=5,
+            text="Banks must verify customer identity.",
+        ),
+        make_chunk(
+            2,
+            title="KYC Circular 2024",
+            page_number=7,
+            text="NBFCs must keep a transaction log.",
+        ),
     ]
 
     prompt = build_citation_prompt("What must banks do?", chunks)
@@ -40,8 +50,18 @@ def test_build_citation_prompt_includes_context_and_rules():
 
 def test_extract_marked_citations_maps_answer_markers_to_chunk_ids():
     chunks = [
-        make_chunk(11, title="RBI KYC Circular 2024", page_number=5, text="Banks must verify customer identity."),
-        make_chunk(12, title="RBI KYC Circular 2024", page_number=8, text="NBFCs must keep transaction records."),
+        make_chunk(
+            11,
+            title="RBI KYC Circular 2024",
+            page_number=5,
+            text="Banks must verify customer identity.",
+        ),
+        make_chunk(
+            12,
+            title="RBI KYC Circular 2024",
+            page_number=8,
+            text="NBFCs must keep transaction records.",
+        ),
     ]
 
     answer = "Banks must verify customer identity [11]. NBFCs must keep records [12]."
@@ -54,7 +74,12 @@ def test_extract_marked_citations_maps_answer_markers_to_chunk_ids():
 
 def test_generate_answer_uses_mocked_client_and_guardrail():
     chunks = [
-        make_chunk(21, title="RBI Circular 2024", page_number=12, text="Banks must perform KYC before onboarding customers."),
+        make_chunk(
+            21,
+            title="RBI Circular 2024",
+            page_number=12,
+            text="Banks must perform KYC before onboarding customers.",
+        ),
     ]
 
     class FakeClient:
@@ -66,7 +91,9 @@ def test_generate_answer_uses_mocked_client_and_guardrail():
                         choices=[
                             SimpleNamespace(
                                 message=SimpleNamespace(
-                                    content="Banks must perform KYC before onboarding customers [21]."
+                                    content=(
+                                        "Banks must perform KYC before onboarding customers [21]."
+                                    )
                                 )
                             )
                         ]

@@ -37,7 +37,8 @@ def generate_answer(
     if not chunks:
         return AnswerResult(
             answer_text=(
-                "I cannot provide a confident answer based on the indexed documents for this query. "
+                "I cannot provide a confident answer based on the indexed "
+                "documents for this query. "
                 "No relevant chunks were retrieved."
             ),
             citations=[],
@@ -48,7 +49,8 @@ def generate_answer(
     if top_score is not None and top_score < low_confidence_threshold:
         return AnswerResult(
             answer_text=(
-                "I cannot provide a confident answer based on the indexed documents for this query. "
+                "I cannot provide a confident answer based on the indexed "
+                "documents for this query. "
                 "The retrieved evidence is too weak to support a grounded answer."
             ),
             citations=[],
