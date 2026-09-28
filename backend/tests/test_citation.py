@@ -1,7 +1,5 @@
 from types import SimpleNamespace
 
-import pytest
-
 from app.models.chunk import Chunk
 from app.models.document import Document, DocumentSource, DocumentType
 from app.services.citation import build_citation_prompt, extract_marked_citations

@@ -5,7 +5,6 @@ from __future__ import annotations
 import re
 
 from app.models.chunk import Chunk
-from app.models.document import Document
 from app.schemas.chunk import ChunkCitation
 
 
