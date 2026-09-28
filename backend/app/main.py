@@ -10,6 +10,7 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api import audit, documents, query
 from app.core.config import settings
 
 # ── Logging ───────────────────────────────────────────────────────────────────
@@ -49,11 +50,9 @@ def health_check() -> dict[str, str]:
     return {"status": "ok"}
 
 
-# ── Routers (added per phase) ─────────────────────────────────────────────────
-# Phase 6 will register:
-#   from app.api import documents, query, audit
-#   app.include_router(documents.router, prefix="/documents", tags=["documents"])
-#   app.include_router(query.router, prefix="/query", tags=["query"])
-#   app.include_router(audit.router, prefix="/audit", tags=["audit"])
+# ── API routers ───────────────────────────────────────────────────────────────
+app.include_router(documents.router, tags=["documents"])
+app.include_router(query.router, tags=["query"])
+app.include_router(audit.router, tags=["audit"])
 
 logger.info("Finance RAG backend started. Visit /docs for the Swagger UI.")

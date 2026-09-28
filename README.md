@@ -109,6 +109,29 @@ merge only after its checks pass.
 With documents already ingested, run `python -m scripts.evaluate_retrieval` from
 `backend/` to compare dense, BM25, and fused rankings for five sample questions.
 
+### Use the API (Phase 6)
+
+Start the backend with Docker Compose, then open `http://localhost:8000/docs` to
+explore the API. The API provides:
+
+- `GET /documents` — paginated document list; optional `source` and `doc_type` filters.
+- `GET /documents/{document_id}` — document metadata and its chunk count.
+- `POST /query` — hybrid retrieval and a grounded, cited answer. Example body:
+
+```json
+{
+    "question": "What KYC checks must banks perform?",
+    "filters": {"source": "RBI", "doc_type": "circular"},
+    "top_k": 5
+}
+```
+
+- `GET /audit` — paginated history of questions, answers, and retrieved chunk IDs.
+
+Querying requires indexed documents, a working PostgreSQL database, and a valid
+OpenAI API key. A query response includes its audit record ID, citations, and
+retrieved source excerpts.
+
 ## Design Decisions
 
 See [DECISIONS.md](DECISIONS.md).
@@ -122,7 +145,7 @@ See [DECISIONS.md](DECISIONS.md).
 | 3 | Ingestion Pipeline | 🚧 Implemented locally; awaiting user validation |
 | 4 | Hybrid Retrieval | 🚧 Implemented locally; awaiting user validation |
 | 5 | Generation + Citations | — |
-| 6 | API Layer | — |
+| 6 | API Layer | 🚧 Implemented locally; awaiting user validation |
 | 7 | Frontend | — |
 | 8 | Eval & Polish | — |
 | 9 | Cloud / Terraform | — |
