@@ -5,12 +5,13 @@ import {
   ApiError,
   askQuestion,
   type DocumentSource,
+  type DocumentType,
   type QueryRequest,
   type QueryResponse,
 } from "@/lib/api"
 
 interface QueryFormProps {
-  onResponse?: (response: QueryResponse) => void
+  onResponse?: (response: QueryResponse | null) => void
 }
 
 const exampleQuestions = [
@@ -25,9 +26,18 @@ const sourceOptions: Array<{ label: string; value: DocumentSource | "ALL" }> = [
   { label: "SEBI", value: "SEBI" },
 ]
 
+const documentTypeOptions: Array<{ label: string; value: DocumentType | "ALL" }> = [
+  { label: "Any document type", value: "ALL" },
+  { label: "Circular", value: "circular" },
+  { label: "Master direction", value: "master_direction" },
+  { label: "Notification", value: "notification" },
+  { label: "Other", value: "other" },
+]
+
 export default function QueryForm({ onResponse }: QueryFormProps) {
   const [question, setQuestion] = useState("")
   const [source, setSource] = useState<DocumentSource | "ALL">("ALL")
+  const [docType, setDocType] = useState<DocumentType | "ALL">("ALL")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [lastRequest, setLastRequest] = useState<QueryRequest | null>(null)
@@ -38,6 +48,7 @@ export default function QueryForm({ onResponse }: QueryFormProps) {
     setError(null)
     setResponseReceived(false)
     setIsLoading(true)
+    onResponse?.(null)
 
     try {
       const response = await askQuestion(request)
@@ -61,7 +72,10 @@ export default function QueryForm({ onResponse }: QueryFormProps) {
 
     void submitRequest({
       question: trimmedQuestion,
-      filters: source === "ALL" ? {} : { source },
+      filters: {
+        ...(source === "ALL" ? {} : { source }),
+        ...(docType === "ALL" ? {} : { doc_type: docType }),
+      },
     })
   }
 
@@ -130,6 +144,27 @@ export default function QueryForm({ onResponse }: QueryFormProps) {
               })}
             </div>
           </fieldset>
+
+          <div className="min-w-48 flex-1 space-y-2 sm:max-w-60">
+            <label className="text-sm text-muted-foreground" htmlFor="query-doc-type">
+              Document type
+            </label>
+            <select
+              className="h-10 w-full rounded-[4px] border border-border bg-white px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:bg-muted"
+              disabled={isLoading}
+              id="query-doc-type"
+              onChange={(event) =>
+                setDocType(event.target.value as DocumentType | "ALL")
+              }
+              value={docType}
+            >
+              {documentTypeOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
 
           <Button
             className="h-10 rounded-[4px] px-5 shadow-none transition-none active:translate-y-0"
