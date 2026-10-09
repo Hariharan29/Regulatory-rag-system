@@ -165,7 +165,7 @@ repository's GitHub PR template.
 | 3 | Ingestion Pipeline | ✅ Validated locally with four PDFs, including OCR |
 | 4 | Hybrid Retrieval | ✅ Local retrieval evaluation run |
 | 5 | Generation + Citations | ✅ Citation mapping and live local query validated |
-| 6 | API Layer | 🚧 Implemented locally; API contract tests still needed |
+| 6 | API Layer | 🚧 API contract tests added; awaiting local and GitHub CI validation |
 | 7 | Frontend | — |
 | 8 | Eval & Polish | — |
 | 9 | Cloud / Terraform | — |
