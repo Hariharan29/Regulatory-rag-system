@@ -30,7 +30,7 @@ services:
         condition: service_healthy
     volumes:
       # Mount raw PDFs so the ingest script can read them without rebuilding the image
-      - ./data/raw_pdfs:/app/data/raw_pdfs:ro
+      - ./data/raw_pdfs:/data/raw_pdfs:ro
 
 volumes:
   pgdata:

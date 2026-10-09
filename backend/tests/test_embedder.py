@@ -40,3 +40,20 @@ def test_embed_texts_rejects_wrong_dimensions():
 
     with pytest.raises(ValueError, match="1536-dimension"):
         embed_texts(["text"], client=client)
+
+
+def test_embed_texts_pads_local_ollama_vectors_to_database_dimension():
+    local_dimensions = 768
+    client = SimpleNamespace(
+        embeddings=SimpleNamespace(
+            create=lambda **kwargs: SimpleNamespace(
+                data=[SimpleNamespace(index=0, embedding=[0.25] * local_dimensions)]
+            )
+        )
+    )
+
+    vectors = embed_texts(["text"], client=client)
+
+    assert len(vectors[0]) == EMBEDDING_DIMENSIONS
+    assert vectors[0][:local_dimensions] == [0.25] * local_dimensions
+    assert vectors[0][local_dimensions:] == [0.0] * local_dimensions
