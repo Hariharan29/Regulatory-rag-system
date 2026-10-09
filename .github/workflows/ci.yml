@@ -1,19 +1,27 @@
 name: CI / CD
 
-# ── Triggers ──────────────────────────────────────────────────────────────────
 on:
   push:
-    branches: [main]
   pull_request:
-    branches: [main]
+    branches:
+      - main
+  workflow_dispatch:
 
-# ── Jobs ──────────────────────────────────────────────────────────────────────
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
-
-  # ── 1. Backend: lint → migrate → test ────────────────────────────────────
-  backend-lint-test:
-    name: Backend — Lint & Test
+  backend:
+    name: Backend (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
 
     services:
       postgres:
@@ -23,95 +31,108 @@ jobs:
           POSTGRES_PASSWORD: ragpass
           POSTGRES_DB: financerag_test
         ports:
-          - "5432:5432"
+          - 5432:5432
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U raguser -d financerag_test"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
 
     env:
-      # Used by Alembic (Phase 2) and pytest integration tests (Phase 6+)
       DATABASE_URL: postgresql://raguser:ragpass@localhost:5432/financerag_test
-      # Real key only needed for generation tests; unit tests mock the OpenAI client.
-      # Store as a GitHub Actions secret: Settings → Secrets → OPENAI_API_KEY_TEST
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY_TEST }}
+      AI_PROVIDER: ollama
 
     steps:
-      - name: Checkout code
+      - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-          cache: "pip"
+          python-version: ${{ matrix.python-version }}
+          cache: pip
           cache-dependency-path: backend/requirements.txt
 
-      - name: Install dependencies
+      - name: Install backend dependencies
         working-directory: backend
-        run: pip install -r requirements.txt
+        run: python -m pip install -r requirements.txt
 
-      - name: Lint — ruff
+      - name: Lint backend
         working-directory: backend
         run: ruff check .
 
-      # Phase 2 adds Alembic migrations; this step is a no-op until then
-      # because there are no migration files yet. It will start doing real
-      # work after the feature/db-schema branch is merged.
-      - name: Run Alembic migrations
+      - name: Apply database migrations
         working-directory: backend
-        # Skip gracefully if alembic.ini doesn't exist yet (Phase 1 only)
-        run: |
-          if [ -f alembic.ini ]; then
-            alembic upgrade head
-          else
-            echo "No alembic.ini found — skipping migrations (Phase 1)."
-          fi
+        run: alembic upgrade head
 
-      - name: Run pytest
+      - name: Run backend tests
         working-directory: backend
         run: pytest -v
 
-  # ── 2. Frontend: install → build ─────────────────────────────────────────
-  frontend-build:
-    name: Frontend — Build
+  frontend:
+    name: Frontend — Lint and Build
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
+      - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Set up Node 20
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
 
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
 
-      # Skip gracefully if frontend hasn't been scaffolded yet (Phase 7)
-      - name: Install & build (if frontend exists)
-        run: |
-          if [ -f frontend/package.json ]; then
-            cd frontend && npm ci && npm run build
-          else
-            echo "No frontend/package.json found — skipping (Phase 1)."
-          fi
+      - name: Lint frontend
+        working-directory: frontend
+        run: npm run lint
 
-  # ── 3. Docker: build & publish backend image to GHCR ─────────────────────
-  # Runs only on merges to main (not on PRs) to avoid publishing unreviewed code.
-  publish-image:
-    name: Publish Docker Image → GHCR
-    needs: backend-lint-test
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+  backend-image:
+    name: Backend — Docker Build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  publish-image:
+    name: Publish Docker Image to GHCR
+    needs:
+      - backend
+      - frontend
+      - backend-image
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
     permissions:
       contents: read
-      packages: write   # required to push to ghcr.io
+      packages: write
 
     steps:
-      - name: Checkout code
+      - name: Check out repository
         uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -120,19 +141,22 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract Docker metadata (tags, labels)
+      - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository }}/finance-rag-backend
           tags: |
             type=sha,prefix=sha-
-            type=raw,value=latest
+            type=ref,event=tag
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
-      - name: Build & push backend image
-        uses: docker/build-push-action@v5
+      - name: Build and publish backend image
+        uses: docker/build-push-action@v6
         with:
           context: ./backend
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

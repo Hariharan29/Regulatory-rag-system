@@ -39,14 +39,22 @@ class Document(Base):
 
     # RBI or SEBI — enforced at DB level via Postgres ENUM
     source: Mapped[DocumentSource] = mapped_column(
-        Enum(DocumentSource, name="document_source"),
+        Enum(
+            DocumentSource,
+            name="document_source",
+            values_callable=lambda enum_type: [member.value for member in enum_type],
+        ),
         nullable=False,
         index=True,
     )
 
     # circular / master_direction / notification / other
     doc_type: Mapped[DocumentType] = mapped_column(
-        Enum(DocumentType, name="document_type"),
+        Enum(
+            DocumentType,
+            name="document_type",
+            values_callable=lambda enum_type: [member.value for member in enum_type],
+        ),
         nullable=False,
         index=True,
     )

@@ -46,8 +46,8 @@
 |---|---|
 | Backend | FastAPI, SQLAlchemy, Alembic |
 | Database | PostgreSQL + pgvector |
-| Embeddings | OpenAI `text-embedding-3-small` |
-| Generation | OpenAI `gpt-4o-mini` |
+| Embeddings | Local Ollama `nomic-embed-text` (or OpenAI `text-embedding-3-small`) |
+| Generation | Local Ollama `llama3.2:3b` (or OpenAI `gpt-4o-mini`) |
 | Retrieval | Hybrid: pgvector (dense) + BM25 (sparse) via RRF |
 | PDF Parsing | PyMuPDF (fitz) |
 | Frontend | React, Vite, TailwindCSS |
@@ -60,18 +60,23 @@
 git clone https://github.com/YOUR_USERNAME/finance-rag.git
 cd finance-rag
 
-# 2. Copy and fill in environment variables
+# 2. Install Ollama from https://ollama.com/download and pull local models
+ollama pull nomic-embed-text
+ollama pull llama3.2:3b
+
+# 3. Copy environment variables (the default uses local Ollama; no API key)
 cp .env.example .env
-# Edit .env: set OPENAI_API_KEY
 
-# 3. Start the database and backend
-docker compose up --build
+# 4. Start PostgreSQL, apply the schema, then start the backend
+docker compose up -d db
+docker compose run --rm backend alembic upgrade head
+docker compose up --build -d
 
-# 4. Verify the backend is running
+# 5. Verify the backend is running
 curl http://localhost:8000/health
 # → {"status": "ok"}
 
-# 5. Explore the API
+# 6. Explore the API
 open http://localhost:8000/docs
 ```
 
@@ -88,10 +93,18 @@ Place PDFs in `data/raw_pdfs/` using names such as `RBI_circular_2024_01.pdf` or
 python -m scripts.ingest
 ```
 
-The command reads `DATABASE_URL` and `OPENAI_API_KEY` from the repository `.env`,
-then stores each PDF and its page-aware chunks. Add real PDFs before this ingestion
-smoke test; parser, chunker, embedder-mocked, and ingestion-mocked pytest cases do
-not require seed PDFs or OpenAI calls.
+The command reads its settings from the repository `.env`, then stores each PDF
+and its page-aware chunks. Pages without selectable text are rendered and OCRed
+locally using Tesseract. By default, embeddings and answer generation use local
+Ollama models, so the demo does not make paid API calls. The backend container
+connects to Ollama on the host at `host.docker.internal:11434`.
+OCR text is used for indexing and citations; the source PDFs are not modified.
+
+Ollama's `nomic-embed-text` returns 768-dimensional vectors; the app zero-pads
+those vectors to fit the existing 1536-dimensional database column. This preserves
+cosine similarity and avoids requiring a destructive database migration.
+To use OpenAI instead, set `AI_PROVIDER=openai` and provide a funded
+`OPENAI_API_KEY`; API use may incur charges.
 
 Run the Phase 3 checks from `backend/` before opening the feature PR:
 
@@ -101,8 +114,8 @@ ruff check .
 ```
 
 After those pass, add PDFs and run `python -m scripts.ingest` with PostgreSQL and
-the OpenAI key configured. Push the feature branch and open a PR to run GitHub CI;
-merge only after its checks pass.
+the configured model provider available. Push the feature branch and open a PR to
+run GitHub CI; merge only after its checks pass.
 
 ### Inspect retrieval (Phase 4)
 
@@ -128,13 +141,20 @@ explore the API. The API provides:
 
 - `GET /audit` — paginated history of questions, answers, and retrieved chunk IDs.
 
-Querying requires indexed documents, a working PostgreSQL database, and a valid
-OpenAI API key. A query response includes its audit record ID, citations, and
-retrieved source excerpts.
+Querying requires indexed documents, a working PostgreSQL database, and the
+configured model provider to be running. With the default Ollama configuration,
+no OpenAI API key is required. A query response includes its audit record ID,
+citations, and retrieved source excerpts.
 
 ## Design Decisions
 
 See [DECISIONS.md](DECISIONS.md).
+
+## Development Workflow
+
+Use [CONTRIBUTING.md](CONTRIBUTING.md) for the required feature-branch,
+local-check, PR, CI, merge, and milestone-tag workflow. Pull requests use the
+repository's GitHub PR template.
 
 ## Project Status
 
@@ -142,10 +162,10 @@ See [DECISIONS.md](DECISIONS.md).
 |---|---|---|
 | 1 | Scaffolding + CI/CD | ✅ Done |
 | 2 | Database Schema | ✅ Done |
-| 3 | Ingestion Pipeline | 🚧 Implemented locally; awaiting user validation |
-| 4 | Hybrid Retrieval | 🚧 Implemented locally; awaiting user validation |
-| 5 | Generation + Citations | — |
-| 6 | API Layer | 🚧 Implemented locally; awaiting user validation |
+| 3 | Ingestion Pipeline | ✅ Validated locally with four PDFs, including OCR |
+| 4 | Hybrid Retrieval | ✅ Local retrieval evaluation run |
+| 5 | Generation + Citations | ✅ Citation mapping and live local query validated |
+| 6 | API Layer | 🚧 Implemented locally; API contract tests still needed |
 | 7 | Frontend | — |
 | 8 | Eval & Polish | — |
 | 9 | Cloud / Terraform | — |

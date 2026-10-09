@@ -46,3 +46,11 @@ Written *as decisions are made* (not retrospectively) so it doubles as interview
 ### D9: Keep the BM25 index in process memory
 **Decision:** Load chunk text and metadata into a reusable in-memory BM25 index for retrieval and evaluation.
 **Reason:** The expected corpus is small and manually seeded. This avoids a second persistence system; index rebuilding after ingestion is acceptable at this project scale.
+
+### D10: Local Ollama models for a zero-API-billing demo
+**Decision:** Use Ollama locally by default for embeddings and answer generation, while retaining OpenAI as an explicitly configured alternative.
+**Reason:** Hosted API usage requires billing and can block student demos when credits are unavailable. Local models avoid per-request API charges; the tradeoff is local model downloads, disk use, and CPU/GPU requirements. The local embedding model returns 768 dimensions, which are zero-padded to fit the existing 1536-dimensional pgvector column without changing cosine similarity or requiring a migration.
+
+### D11: OCR scanned pages during text extraction
+**Decision:** When a PDF page has no selectable text, render that page and OCR it locally with Tesseract.
+**Reason:** Regulatory PDFs are sometimes image-only scans. OCR fallback keeps searchable PDFs unchanged and preserves page-aware citations, at the cost of slower ingestion and possible OCR recognition errors.

@@ -7,10 +7,12 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# Install system dependencies needed by psycopg2 and PyMuPDF
+# Install system dependencies needed by psycopg2 and OCR.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     gcc \
+    tesseract-ocr \
+    tesseract-ocr-eng \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy and install Python dependencies first (leverages Docker layer cache)

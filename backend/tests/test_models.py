@@ -32,6 +32,16 @@ class TestDocumentModel:
         assert DocumentType.NOTIFICATION.value == "notification"
         assert DocumentType.OTHER.value == "other"
 
+    def test_orm_enum_labels_match_migration_values(self) -> None:
+        """ORM persists enum values, matching the labels defined by Alembic."""
+        assert Document.__table__.c.source.type.enums == ["RBI", "SEBI"]
+        assert Document.__table__.c.doc_type.type.enums == [
+            "circular",
+            "master_direction",
+            "notification",
+            "other",
+        ]
+
     def test_document_repr(self) -> None:
         """__repr__ should include id, source, and title."""
         doc = Document(

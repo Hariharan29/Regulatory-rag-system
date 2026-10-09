@@ -6,6 +6,7 @@ Uses pydantic-settings so every variable is type-checked at startup.
 """
 
 from pathlib import Path
+from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -17,8 +18,12 @@ class Settings(BaseSettings):
     # In CI:            postgresql://raguser:ragpass@localhost:5432/financerag_test
     database_url: str
 
-    # ── OpenAI ───────────────────────────────────────────────────────────────
-    openai_api_key: str
+    # ── Model provider ───────────────────────────────────────────────────────
+    ai_provider: Literal["ollama", "openai"] = "ollama"
+    openai_api_key: str | None = None
+    ollama_base_url: str = "http://host.docker.internal:11434/v1"
+    ollama_embedding_model: str = "nomic-embed-text"
+    ollama_chat_model: str = "llama3.2:3b"
 
     # ── Application ──────────────────────────────────────────────────────────
     log_level: str = "INFO"

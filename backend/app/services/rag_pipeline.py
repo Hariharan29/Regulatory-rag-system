@@ -8,7 +8,12 @@ from openai import OpenAI
 
 from app.models.chunk import Chunk
 from app.schemas.chunk import ChunkCitation
-from app.services.citation import build_citation_prompt, extract_marked_citations
+from app.services.ai_client import create_ai_client
+from app.services.citation import (
+    build_citation_prompt,
+    extract_marked_citations,
+    has_unmapped_citation_markers,
+)
 
 
 @dataclass(slots=True)
@@ -26,7 +31,7 @@ def generate_answer(
     chunks: list[Chunk],
     *,
     top_score: float | None = None,
-    model: str = "gpt-4o-mini",
+    model: str | None = None,
     low_confidence_threshold: float = 0.5,
     client: OpenAI | None = None,
 ) -> AnswerResult:
@@ -58,10 +63,16 @@ def generate_answer(
             low_confidence=True,
         )
 
-    if client is None:
+    if model is None:
         from app.core.config import settings
 
-        client = OpenAI(api_key=settings.openai_api_key)
+        model = (
+            settings.ollama_chat_model
+            if settings.ai_provider == "ollama"
+            else "gpt-4o-mini"
+        )
+    if client is None:
+        client = create_ai_client()
 
     prompt = build_citation_prompt(question, chunks)
     response = client.chat.completions.create(
@@ -74,6 +85,17 @@ def generate_answer(
     answer_text = response.choices[0].message.content.strip()
 
     citations = extract_marked_citations(answer_text, chunks)
+    if not citations or has_unmapped_citation_markers(answer_text, chunks):
+        return AnswerResult(
+            answer_text=(
+                "I cannot provide a confident answer based on the indexed documents "
+                "because the generated response could not be matched to valid sources."
+            ),
+            citations=[],
+            chunks_used=[chunk.id for chunk in chunks if chunk.id is not None],
+            low_confidence=True,
+        )
+
     chunk_ids = [citation.chunk_id for citation in citations]
     return AnswerResult(
         answer_text=answer_text,
