@@ -10,7 +10,9 @@ export interface QueryRequest {
   question: string
   filters: {
     source?: DocumentSource
+    doc_type?: DocumentType
   }
+  top_k?: number
 }
 
 export interface QueryCitation {
@@ -54,6 +56,10 @@ export interface DocumentListResponse {
   items: DocumentRecord[]
 }
 
+export interface DocumentDetail extends DocumentRecord {
+  chunk_count: number
+}
+
 export class ApiError extends Error {
   readonly status: number
 
@@ -64,7 +70,7 @@ export class ApiError extends Error {
   }
 }
 
-const API_BASE_URL = (import.meta.env.VITE_API_URL || "http://localhost:8000").replace(
+export const API_BASE_URL = (import.meta.env.VITE_API_URL || "http://localhost:8000").replace(
   /\/+$/,
   "",
 )
@@ -102,6 +108,20 @@ export function askQuestion(request: QueryRequest): Promise<QueryResponse> {
   })
 }
 
-export function getDocuments(): Promise<DocumentListResponse> {
-  return requestJson<DocumentListResponse>("/documents")
+export function getDocuments(options: {
+  source?: DocumentSource
+  doc_type?: DocumentType
+  offset?: number
+  limit?: number
+} = {}): Promise<DocumentListResponse> {
+  const params = new URLSearchParams()
+  if (options.source) params.set("source", options.source)
+  if (options.doc_type) params.set("doc_type", options.doc_type)
+  params.set("offset", String(options.offset ?? 0))
+  params.set("limit", String(options.limit ?? 10))
+  return requestJson<DocumentListResponse>(`/documents?${params.toString()}`)
+}
+
+export function getDocument(documentId: number): Promise<DocumentDetail> {
+  return requestJson<DocumentDetail>(`/documents/${documentId}`)
 }
