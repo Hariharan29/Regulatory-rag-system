@@ -1,0 +1,107 @@
+[
+  {
+    "id": "rbi-scst-01",
+    "question": "Which committees coordinate banks and development agencies on credit facilities for Scheduled Castes and Scheduled Tribes?",
+    "expected_documents": [
+      "RBI_circular_2026_01_Credit_facilities_to_Scheduled_castes_and_Tribes.pdf"
+    ]
+  },
+  {
+    "id": "rbi-scst-02",
+    "question": "How should district credit plans connect lending to employment and development schemes for SC and ST communities?",
+    "expected_documents": [
+      "RBI_circular_2026_01_Credit_facilities_to_Scheduled_castes_and_Tribes.pdf"
+    ]
+  },
+  {
+    "id": "rbi-scst-03",
+    "question": "Which local agencies should banks coordinate with to promote self-employment for Scheduled Caste and Scheduled Tribe borrowers?",
+    "expected_documents": [
+      "RBI_circular_2026_01_Credit_facilities_to_Scheduled_castes_and_Tribes.pdf"
+    ]
+  },
+  {
+    "id": "rbi-scst-04",
+    "question": "How should block-level credit planning take SC and ST participation into account?",
+    "expected_documents": [
+      "RBI_circular_2026_01_Credit_facilities_to_Scheduled_castes_and_Tribes.pdf"
+    ]
+  },
+  {
+    "id": "rbi-scst-05",
+    "question": "How should banks consider loan proposals from Scheduled Castes and Scheduled Tribes?",
+    "expected_documents": [
+      "RBI_circular_2026_01_Credit_facilities_to_Scheduled_castes_and_Tribes.pdf"
+    ]
+  },
+  {
+    "id": "rbi-pd-01",
+    "question": "What rules govern Primary Dealers' activities in the primary market?",
+    "expected_documents": [
+      "RBI_master_direction_2026_01_Operational_Guidelines_for_Primary_dealers.pdf"
+    ]
+  },
+  {
+    "id": "rbi-pd-02",
+    "question": "What operational guidelines apply to Primary Dealers in the secondary market?",
+    "expected_documents": [
+      "RBI_master_direction_2026_01_Operational_Guidelines_for_Primary_dealers.pdf"
+    ]
+  },
+  {
+    "id": "rbi-pd-03",
+    "question": "What does the RBI guidance cover about the Liquidity Standing Facility for Primary Dealers?",
+    "expected_documents": [
+      "RBI_master_direction_2026_01_Operational_Guidelines_for_Primary_dealers.pdf"
+    ]
+  },
+  {
+    "id": "rbi-pd-04",
+    "question": "Which investment guidelines must Primary Dealers follow?",
+    "expected_documents": [
+      "RBI_master_direction_2026_01_Operational_Guidelines_for_Primary_dealers.pdf"
+    ]
+  },
+  {
+    "id": "rbi-pd-05",
+    "question": "What systems and controls are prescribed for Primary Dealers?",
+    "expected_documents": [
+      "RBI_master_direction_2026_01_Operational_Guidelines_for_Primary_dealers.pdf"
+    ]
+  },
+  {
+    "id": "sebi-fpi-01",
+    "question": "What regulatory compliance measures are eased for FPIs investing only in government securities?",
+    "expected_documents": [
+      "SEBI_circular_2026_01_Ease_of_regulatory_compliances_for_FPIs_investing_only_in_Government_Securities.pdf"
+    ]
+  },
+  {
+    "id": "sebi-fpi-02",
+    "question": "Which FPI compliance requirements are addressed for investors whose holdings are limited to government securities?",
+    "expected_documents": [
+      "SEBI_circular_2026_01_Ease_of_regulatory_compliances_for_FPIs_investing_only_in_Government_Securities.pdf"
+    ]
+  },
+  {
+    "id": "sebi-fpi-03",
+    "question": "What SEBI guidance applies to foreign portfolio investors that invest exclusively in government securities?",
+    "expected_documents": [
+      "SEBI_circular_2026_01_Ease_of_regulatory_compliances_for_FPIs_investing_only_in_Government_Securities.pdf"
+    ]
+  },
+  {
+    "id": "sebi-office-01",
+    "question": "What does the SEBI notification say about opening a local office in Chandigarh?",
+    "expected_documents": [
+      "SEBI_notification_2026_01_Opens_a_Local_Office_in_Chandigarh.pdf"
+    ]
+  },
+  {
+    "id": "sebi-office-02",
+    "question": "Where is SEBI opening a local office according to its notification?",
+    "expected_documents": [
+      "SEBI_notification_2026_01_Opens_a_Local_Office_in_Chandigarh.pdf"
+    ]
+  }
+]

@@ -1,171 +1,84 @@
-# Finance RAG — RBI/SEBI Compliance Assistant
+# Finance RAG
 
-> A Retrieval-Augmented Generation system that indexes RBI and SEBI regulatory documents and answers compliance questions in plain English, with inline citations pointing to the source document and page number.
+A local-first research assistant for RBI and SEBI regulatory documents. Ask
+questions in plain language, retrieve relevant passages, and review answers with
+document and page citations.
 
----
+## Features
 
-## Architecture
+- PDF ingestion with page-aware text extraction and OCR for scanned pages.
+- Hybrid search using pgvector, BM25, and reciprocal-rank fusion.
+- Grounded answers with mapped source citations.
+- Document library, regulator/type filters, and query audit history.
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        User Query                           │
-└──────────────────────────────┬──────────────────────────────┘
-                               │
-                    ┌──────────▼──────────┐
-                    │   FastAPI Backend    │
-                    │   POST /query        │
-                    └──────────┬──────────┘
-                               │
-              ┌────────────────┼────────────────┐
-              │                │                │
-   ┌──────────▼──────┐  ┌──────▼──────┐  ┌─────▼──────────┐
-   │  Dense Retrieval │  │   BM25      │  │  Audit Log     │
-   │  (pgvector cos) │  │  (in-memory)│  │  (PostgreSQL)  │
-   └──────────┬──────┘  └──────┬──────┘  └────────────────┘
-              │                │
-              └────────┬───────┘
-                       │  RRF Fusion
-              ┌────────▼────────┐
-              │  Top-k Chunks   │
-              └────────┬────────┘
-                       │
-              ┌────────▼────────┐
-              │  GPT-4o-mini    │
-              │  (cited answer) │
-              └────────┬────────┘
-                       │
-              ┌────────▼────────┐
-              │  React Frontend │
-              │  (citations UI) │
-              └─────────────────┘
-```
+## Stack
 
-## Tech Stack
+FastAPI · PostgreSQL/pgvector · React/Vite · Docker Compose · Ollama
 
-| Layer | Technology |
-|---|---|
-| Backend | FastAPI, SQLAlchemy, Alembic |
-| Database | PostgreSQL + pgvector |
-| Embeddings | Local Ollama `nomic-embed-text` (or OpenAI `text-embedding-3-small`) |
-| Generation | Local Ollama `llama3.2:3b` (or OpenAI `gpt-4o-mini`) |
-| Retrieval | Hybrid: pgvector (dense) + BM25 (sparse) via RRF |
-| PDF Parsing | PyMuPDF (fitz) |
-| Frontend | React, Vite, TailwindCSS |
-| Infra | Docker Compose (local), Terraform + EC2 (cloud) |
+## Run locally
 
-## Quick Start (Local)
+Prerequisites: Docker Desktop, Node.js/npm, and [Ollama](https://ollama.com/download).
 
-```bash
-# 1. Clone and enter the repo
-git clone https://github.com/YOUR_USERNAME/finance-rag.git
-cd finance-rag
+Pull the default local models:
 
-# 2. Install Ollama from https://ollama.com/download and pull local models
+```powershell
 ollama pull nomic-embed-text
 ollama pull llama3.2:3b
+```
 
-# 3. Copy environment variables (the default uses local Ollama; no API key)
-cp .env.example .env
+From the repository root, configure the environment and start the backend:
 
-# 4. Start PostgreSQL, apply the schema, then start the backend
+```powershell
+Copy-Item .env.example .env
 docker compose up -d db
 docker compose run --rm backend alembic upgrade head
 docker compose up --build -d
-
-# 5. Verify the backend is running
-curl http://localhost:8000/health
-# → {"status": "ok"}
-
-# 6. Explore the API
-open http://localhost:8000/docs
 ```
 
-## Setup Instructions (full)
+Add regulatory PDFs to `data/raw_pdfs`, then ingest them:
 
-See [DECISIONS.md](DECISIONS.md) for architectural rationale.
-
-### Ingest PDFs (Phase 3)
-
-Place PDFs in `data/raw_pdfs/` using names such as `RBI_circular_2024_01.pdf` or
-`SEBI_master_direction_2023_05.pdf`. From `backend/`, run:
-
-```bash
-python -m scripts.ingest
+```powershell
+docker compose run --rm backend python -m scripts.ingest
 ```
 
-The command reads its settings from the repository `.env`, then stores each PDF
-and its page-aware chunks. Pages without selectable text are rendered and OCRed
-locally using Tesseract. By default, embeddings and answer generation use local
-Ollama models, so the demo does not make paid API calls. The backend container
-connects to Ollama on the host at `host.docker.internal:11434`.
-OCR text is used for indexing and citations; the source PDFs are not modified.
+Start the frontend in a separate terminal:
 
-Ollama's `nomic-embed-text` returns 768-dimensional vectors; the app zero-pads
-those vectors to fit the existing 1536-dimensional database column. This preserves
-cosine similarity and avoids requiring a destructive database migration.
-To use OpenAI instead, set `AI_PROVIDER=openai` and provide a funded
-`OPENAI_API_KEY`; API use may incur charges.
-
-Run the Phase 3 checks from `backend/` before opening the feature PR:
-
-```bash
-pytest -q
-ruff check .
+```powershell
+cd frontend
+npm ci
+npm run dev
 ```
 
-After those pass, add PDFs and run `python -m scripts.ingest` with PostgreSQL and
-the configured model provider available. Push the feature branch and open a PR to
-run GitHub CI; merge only after its checks pass.
+Open the local URL printed by Vite (normally `http://localhost:5173`). The API
+is available at `http://localhost:8000`; interactive API docs are at
+`http://localhost:8000/docs`.
 
-### Inspect retrieval (Phase 4)
+The default configuration uses local Ollama models. To use OpenAI instead,
+set `AI_PROVIDER=openai` and configure `OPENAI_API_KEY` in `.env`; API usage
+may incur charges.
 
-With documents already ingested, run `python -m scripts.evaluate_retrieval` from
-`backend/` to compare dense, BM25, and fused rankings for five sample questions.
+## Checks and evaluation
 
-### Use the API (Phase 6)
+Run frontend checks from `frontend/`:
 
-Start the backend with Docker Compose, then open `http://localhost:8000/docs` to
-explore the API. The API provides:
-
-- `GET /documents` — paginated document list; optional `source` and `doc_type` filters.
-- `GET /documents/{document_id}` — document metadata and its chunk count.
-- `POST /query` — hybrid retrieval and a grounded, cited answer. Example body:
-
-```json
-{
-    "question": "What KYC checks must banks perform?",
-    "filters": {"source": "RBI", "doc_type": "circular"},
-    "top_k": 5
-}
+```powershell
+npm run lint
+npm run build
 ```
 
-- `GET /audit` — paginated history of questions, answers, and retrieved chunk IDs.
+Run backend tests and lint from `backend/`:
 
-Querying requires indexed documents, a working PostgreSQL database, and the
-configured model provider to be running. With the default Ollama configuration,
-no OpenAI API key is required. A query response includes its audit record ID,
-citations, and retrieved source excerpts.
+```powershell
+python -m pytest -q
+python -m ruff check .
+```
 
-## Design Decisions
+After the seed PDFs are ingested, run the retrieval benchmark from `backend/`:
 
-See [DECISIONS.md](DECISIONS.md).
+```powershell
+python -m scripts.evaluate_retrieval --output evaluation-results/phase8.json
+```
 
-## Development Workflow
-
-Use [CONTRIBUTING.md](CONTRIBUTING.md) for the required feature-branch,
-local-check, PR, CI, merge, and milestone-tag workflow. Pull requests use the
-repository's GitHub PR template.
-
-## Project Status
-
-| Phase | Description | Status |
-|---|---|---|
-| 1 | Scaffolding + CI/CD | ✅ Done |
-| 2 | Database Schema | ✅ Done |
-| 3 | Ingestion Pipeline | ✅ Validated locally with four PDFs, including OCR |
-| 4 | Hybrid Retrieval | ✅ Local retrieval evaluation run |
-| 5 | Generation + Citations | ✅ Citation mapping and live local query validated |
-| 6 | API Layer | ✅ Merged; API contract tests included |
-| 7 | Frontend | 🚧 Document library, filters, and citation source UI implemented; awaiting user validation |
-| 8 | Eval & Polish | — |
-| 9 | Cloud / Terraform | — |
+See [Phase 8 evaluation notes](docs/PHASE_8_EVALUATION.md) for metric
+definitions and answer/citation review guidance. See
+[CONTRIBUTING.md](CONTRIBUTING.md) for the branch and pull-request workflow.
