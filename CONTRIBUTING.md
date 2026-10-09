@@ -63,6 +63,25 @@ Never make CI depend on a paid provider or a developer's local data. Unit tests
 should mock external model calls; use PostgreSQL service containers for
 database-backed checks.
 
+The API contract tests use a separate PostgreSQL database named with a `_test`
+suffix. Before running them locally, create and migrate that test database,
+then set `TEST_DATABASE_URL` to it. The test fixture rolls back its data after
+each test and refuses to run against a database whose name does not end in
+`_test`. For the local Compose database, run this one-time setup from the
+repository root (skip the `CREATE DATABASE` command if it already exists):
+
+```powershell
+docker compose up -d db
+docker compose exec -T db psql -U raguser -d postgres -c "CREATE DATABASE financerag_test;"
+docker compose run --rm -e DATABASE_URL=postgresql+psycopg2://raguser:ragpass@db:5432/financerag_test backend alembic upgrade head
+
+cd backend
+$env:TEST_DATABASE_URL = "postgresql+psycopg2://raguser:ragpass@localhost:5432/financerag_test"
+python -m pytest -q
+Remove-Item Env:TEST_DATABASE_URL
+cd ..
+```
+
 Before staging, review the full change:
 
 ```powershell

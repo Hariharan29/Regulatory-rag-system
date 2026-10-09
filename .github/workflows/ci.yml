@@ -40,6 +40,7 @@ jobs:
 
     env:
       DATABASE_URL: postgresql://raguser:ragpass@localhost:5432/financerag_test
+      TEST_DATABASE_URL: postgresql+psycopg2://raguser:ragpass@localhost:5432/financerag_test
       AI_PROVIDER: ollama
 
     steps:
