@@ -1,0 +1,5 @@
+aws_region       = "ap-south-1"
+instance_type    = "t4g.large"
+ssh_ingress_cidr = "198.51.100.25/32"
+ssh_key_name     = "finance-rag-demo"
+volume_size_gib  = 40

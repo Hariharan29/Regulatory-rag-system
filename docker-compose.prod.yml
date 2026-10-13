@@ -1,0 +1,58 @@
+services:
+  db:
+    image: ankane/pgvector:latest
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: raguser
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in the server .env file}
+      POSTGRES_DB: financerag
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U raguser -d financerag"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    volumes:
+      - ollama:/root/.ollama
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      AI_PROVIDER: ollama
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in the server .env file}
+      OLLAMA_BASE_URL: http://ollama:11434/v1
+      OLLAMA_EMBEDDING_MODEL: ${OLLAMA_EMBEDDING_MODEL:-nomic-embed-text}
+      OLLAMA_CHAT_MODEL: ${OLLAMA_CHAT_MODEL:-llama3.2:3b}
+    depends_on:
+      db:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+    volumes:
+      - ./data/raw_pdfs:/data/raw_pdfs:ro
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /api
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+  ollama:
