@@ -1,17 +1,17 @@
 variable "aws_region" {
   description = "AWS region in which the temporary demo instance will be created."
   type        = string
-  default     = "ap-south-1"
+  default     = "ap-southeast-2"
 }
 
 variable "instance_type" {
-  description = "ARM-based EC2 instance type; review the current account's pricing before use."
+  description = "Configured EC2 instance type; verify account eligibility and current pricing before use."
   type        = string
-  default     = "t4g.large"
+  default     = "m7i-flex.large"
 
   validation {
-    condition     = startswith(var.instance_type, "t4g.")
-    error_message = "Use a Graviton t4g instance type compatible with the selected ARM64 Ubuntu image."
+    condition     = var.instance_type == "m7i-flex.large"
+    error_message = "This deployment is configured for m7i-flex.large and the matching AMD64 Ubuntu image."
   }
 }
 

@@ -2,7 +2,7 @@
 
 ## Scope
 
-The repository now contains Terraform for a single Ubuntu 24.04 ARM64 EC2 host
+The repository now contains Terraform for a single Ubuntu 24.04 AMD64 EC2 host
 and a separate production Docker Compose stack. The host bootstrap installs
 Docker; application deployment is performed manually over SSH. The stack
 contains React/Nginx, FastAPI, PostgreSQL/pgvector, and Ollama. Only HTTP is
@@ -15,15 +15,17 @@ centralized logs, or automated cloud deployment. The public IP is ephemeral.
 
 ## Cost and safety
 
-The default EC2 size is `t4g.large` with a 40 GiB encrypted gp3 root volume so a
-small local model has some memory/disk headroom. These resources are **not
+The configured EC2 size is `m7i-flex.large` with a 40 GiB encrypted gp3 root
+volume to provide more capacity than a micro instance. These resources are **not
 guaranteed to be free**. Free plan eligibility and credits are account-specific
 and can change; storage, public IPv4, data transfer, and usage outside current
 allowances can be billable. Check the account plan and estimate before apply.
 
-No AWS resources were created by preparing these files. Terraform `plan` is
-read-only; `apply` creates billable resources and must be a separately reviewed
-manual action. `terraform destroy` is documented for cleanup.
+The temporary AWS demo was deployed and smoke-tested, then destroyed. The
+frontend, API health endpoint, four ingested PDFs, and a generated answer were
+checked during the demo. Terraform state is now empty. The endpoint used plain
+HTTP and the local Ollama model produced slow responses; this was a portfolio
+demo, not production hosting.
 
 ## Repository workflow
 
@@ -38,13 +40,15 @@ proxies `/api/*` to the internal FastAPI container. The production compose file
 [`docker-compose.prod.yml`](../docker-compose.prod.yml) does not publish the
 database or backend ports to the internet.
 
-## Verification still required
+## Verification completed and limitations
 
-The configuration is prepared, not deployed. Before calling Phase 9 complete:
+The following smoke checks were completed during the temporary deployment:
 
-1. Run Terraform formatting and validation locally.
-2. Inspect the complete Terraform plan and current AWS account costs.
-3. Only after explicit owner approval, apply and deploy to AWS.
-4. Verify the public frontend, API health, document ingestion, query, and
-   citation behavior.
-5. Destroy the temporary deployment and confirm no billable resources remain.
+1. Terraform formatting and validation passed.
+2. The public frontend and API health endpoint responded.
+3. Four sample PDFs were ingested and listed by the API.
+4. A sample query returned a generated answer in the browser.
+5. The Terraform-managed instance and security group were destroyed.
+
+The deployment was temporary and HTTP-only. AWS billing data can lag, so check
+the account's billing pages for any residual or delayed charges.

@@ -13,8 +13,8 @@ provider "aws" {
   region = var.aws_region
 }
 
-data "aws_ssm_parameter" "ubuntu_arm64_ami" {
-  name = "/aws/service/canonical/ubuntu/server/24.04/stable/current/arm64/hvm/ebs-gp3/ami-id"
+data "aws_ssm_parameter" "ubuntu_amd64_ami" {
+  name = "/aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id"
 }
 
 data "aws_vpc" "default" {
