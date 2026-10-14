@@ -41,8 +41,8 @@ data/raw_pdfs/*.pdf
 infra/.terraform/
 infra/*.tfstate
 infra/*.tfstate.backup
-infra/.terraform.lock.hcl
 infra/terraform.tfvars
+infra/tfplan
 # commit terraform.tfvars.example instead (see infra/)
 
 # IDE

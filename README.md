@@ -82,3 +82,5 @@ python -m scripts.evaluate_retrieval --output evaluation-results/phase8.json
 See [Phase 8 evaluation notes](docs/PHASE_8_EVALUATION.md) for metric
 definitions and answer/citation review guidance. See
 [CONTRIBUTING.md](CONTRIBUTING.md) for the branch and pull-request workflow.
+See [Phase 9 deployment instructions](docs/PHASE_9_DEPLOYMENT.md) for the
+optional temporary AWS demo setup and its cost warnings.
